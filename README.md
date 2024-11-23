@@ -1,142 +1,149 @@
+# asyncio_queue
 
-# asyncio-queue
-
-`asyncio-queue` is a Python-based batch queue manager built using `asyncio`. It provides a simple way to manage and schedule tasks locally with support for dynamic CPU allocation, logging, and daemonized operation.
+**asyncio_queue** is a simple task queuing system built using Python's `asyncio`. It allows you to submit, manage, and track tasks using a lightweight, XML-RPC-based interface.
 
 ## Features
-- **Task Submission:** Submit tasks with configurable environments, working directories, and log files.
-- **Dynamic CPU Allocation:** Automatically detects available CPUs or allows manual configuration.
-- **Daemonized Server:** Run the server in the background.
-- **Task Management:** Start, stop, suspend, resume, or list tasks via a command-line interface (CLI).
+- Submit, list, suspend, resume, and kill tasks using command-line commands.
+- Tasks can be queued, paused, or resumed based on available CPUs.
+- XML-RPC server for managing task requests.
+- Ability to run tasks using multiple CPUs.
+- Tasks can be paused and resumed.
 
----
+## Requirements
+- Python 3.7+
+- `aiohttp`
+- `requests`
 
 ## Installation
+You can install **asyncio_queue** from PyPI:
 
-Install the package from PyPI:
-```
-pip install asyncio-queue
-```
-
-Alternatively, install it from the source:
-```
-hg clone https://hg.sr.ht/~ndbecker2/asyncio-queue
-cd asyncio-queue
-pip install .
+```sh
+pip install asyncio_queue
 ```
 
----
+Or clone the repository from [Sourcehut](https://sr.ht/~ndbecker2/asyncio_queue/):
+
+```sh
+git clone https://sr.ht/~ndbecker2/asyncio_queue/
+cd asyncio_queue
+python -m pip install .
+```
 
 ## Usage
 
+After installing, you can use the `batch_queue` command to manage tasks. Below are the available options:
+
 ### Starting the Server
+To start the server:
 
-Start the server with auto-detected CPUs:
-```
-asyncio-queue start
-```
-
-Start the server with a specific number of CPUs (e.g., 4):
-```
-asyncio-queue start --ncpu=4
+```sh
+batch_queue start --max-cpus 4
 ```
 
-Start the server on a custom port:
+- `--max-cpus`: (Optional) Specify the maximum number of CPUs to use. Defaults to the number of CPUs available on your system.
+
+The server will start in daemon mode by default.
+
+### Submitting a Task
+To submit a task, use the `submit` command:
+
+```sh
+batch_queue submit <command>
 ```
-asyncio-queue start --port=9000
+For example:
+
+```sh
+batch_queue submit sleep 10
 ```
 
-Start the server in the background (daemonized):
-```
-asyncio-queue start --daemon
-```
-
----
-
-### Submitting Tasks
-
-Submit a task to the queue:
-```
-asyncio-queue submit --user yourname echo "Hello, World!"
-```
-
-Submit a task with a specific working directory:
-```
-asyncio-queue submit --user yourname --path /home/yourname myscript.sh
-```
-
-Submit a task with environment variables:
-```
-asyncio-queue submit --user yourname --env '{"MY_VAR": "value"}' python myscript.py
-```
-
-Submit a task and log outputs:
-```
-asyncio-queue submit --user yourname --log-stdout stdout.log --log-stderr stderr.log python myscript.py
-```
-
----
+You can also optionally specify:
+- `--log-stdout <file>`: Redirect the standard output of the task to a file.
+- `--log-stderr <file>`: Redirect the standard error of the task to a file.
 
 ### Listing Tasks
+To list all tasks:
 
-View all tasks in the queue:
+```sh
+batch_queue list
 ```
-asyncio-queue list
+This will display:
+- Max CPUs available.
+- Active tasks.
+- Queued tasks.
+- Paused tasks.
+
+### Suspending and Resuming Tasks
+To suspend a running task:
+
+```sh
+batch_queue suspend <task_id>
 ```
 
-Example output:
-```
-CPUs: 4 available, 2 used, 2 free
-Active tasks:
-  Task(id=1, command=['echo', 'Hello, World!'], user='yourname', active=True)
-Queued tasks:
-  Task(id=2, command=['python', 'myscript.py'], user='yourname', active=False)
-Stopped tasks:
+To resume a paused task:
+
+```sh
+batch_queue resume <task_id>
 ```
 
----
+### Killing a Task
+To kill a specific task:
+
+```sh
+batch_queue kill <task_id>
+```
+You can also optionally specify the signal to use, default is `SIGTERM`.
+
+### Getting Task Information
+To get detailed information about a specific task:
+
+```sh
+batch_queue id <task_id>
+```
+This command provides detailed information about the task including command, user, working directory, environment variables, and logs.
 
 ### Stopping the Server
+To stop the server:
 
-Stop the server and all running tasks:
+```sh
+batch_queue stop
 ```
-asyncio-queue stop
-```
+This command gracefully stops the server, ensuring no tasks are left in a zombie state.
 
----
+## Example Workflow
+1. Start the server using:
+   ```sh
+   batch_queue start --max-cpus 4
+   ```
 
-### Managing Task Execution
+2. Submit a couple of tasks:
+   ```sh
+   batch_queue submit sleep 10
+   batch_queue submit echo "Hello World"
+   ```
 
-Suspend a running task:
-```
-asyncio-queue suspend <task_id>
-```
+3. List the tasks to see the active, queued, and paused tasks:
+   ```sh
+   batch_queue list
+   ```
 
-Resume a suspended task:
-```
-asyncio-queue resume <task_id>
-```
+4. Suspend a running task:
+   ```sh
+   batch_queue suspend 0
+   ```
 
-Kill a specific task:
-```
-asyncio-queue kill <task_id>
-```
+5. Resume a paused task:
+   ```sh
+   batch_queue resume 0
+   ```
 
----
+6. Stop the server:
+   ```sh
+   batch_queue stop
+   ```
 
-### Configuration Options
-
-- **Dynamic CPU Allocation:** The server auto-detects available CPUs. You can override this with the `--ncpu` option.
-- **Custom Logging:** Use the `--log-stdout` and `--log-stderr` options during task submission to capture task output.
-
----
-
-## Contributing
-
-The source code is available on [SourceHut](https://hg.sr.ht/~ndbecker2/asyncio-queue). Contributions, bug reports, and feature requests are welcome. Please use Mercurial for version control.
-
----
+## Logging
+The server logs all activity to `~/batch_queue.log`. You can view the log to monitor task submissions, task status changes, server starts and stops, etc.
 
 ## License
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
 
-This project is licensed under the MIT License. See the `LICENSE` file for details.

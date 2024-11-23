@@ -80,18 +80,6 @@ def start_server(max_cpus):
     # Start the server process
     subprocess.Popen(["python", "-m", "asyncio_queue.server"], env=env)
 
-# def start_server(max_cpus=None, daemon=True):
-#     command = ["python3", "-m", "asyncio_queue.server"]
-#     if max_cpus is not None:
-#         command.extend(["--max-cpus", str(max_cpus)])
-#     if daemon:
-#         command.append("--daemon")
-#     try:
-#         subprocess.Popen(command)
-#         print("Server started successfully.")
-#     except Exception as e:
-#         print(f"Failed to start server: {e}")
-
 def main():
     parser = argparse.ArgumentParser(description="Batch Queue CLI")
     subparsers = parser.add_subparsers(dest="command")
