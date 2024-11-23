@@ -183,7 +183,7 @@ async def handle_rpc(request, task_manager):
         elif method_name == "id_task":
             task_id = params[0]
             task_info = await task_manager.get_task_info(task_id)
-            response = xmlrpc.client.dumps((task_info,), methodresponse=True)
+            response = xmlrpc.client.dumps((task_info,), methodresponse=True, allow_none=True)
 
         elif method_name == "suspend_task":
             task_id = params[0]
