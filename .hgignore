@@ -3,3 +3,5 @@ syntax: glob
 *~
 *.pyc
 __pycache__
+asyncio_queue.egg-info
+dist
