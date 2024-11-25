@@ -82,9 +82,9 @@ class TaskManager:
         self.active_tasks.remove(task)
 
         if task.process.returncode == 0:
-            logging.info(f"Task {task.task_id} completed successfully.")
+            logging.info(f"Task id={task.task_id} cmd={task.command} completed successfully.")
         else:
-            logging.error(f"Task {task.task_id} failed with return code {task.process.returncode}.")
+            logging.error(f"Task id={task.task_id} cmd={task.command} failed with return code {task.process.returncode}.")
 
         # Schedule any tasks waiting in the queue
         await self.schedule_tasks()
@@ -228,7 +228,8 @@ async def start_server(task_manager):
     app = web.Application()
     app.add_routes([web.post('/RPC2', handler)])
 
-    runner = web.AppRunner(app)
+    # Disable access logs by setting access_log=None in AppRunner
+    runner = web.AppRunner(app, access_log=None)
     await runner.setup()
     site = web.TCPSite(runner, 'localhost', 7080)
     await site.start()
