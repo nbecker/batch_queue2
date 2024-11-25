@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="asyncio_queue",
-    version="1.0.2",
+    version="1.0.3",
     author="Neal Becker",
     author_email="ndbecker2@gmail.com",
     description="A Python-based batch queue manager",
