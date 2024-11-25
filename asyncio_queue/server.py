@@ -249,7 +249,7 @@ async def graceful_shutdown():
     asyncio.get_event_loop().stop()
 
 def main():
-    max_cpus = int(os.getenv("MAX_CPUS", 2))
+    max_cpus = int(os.getenv("MAX_CPUS", os.cpu_count()))
     task_manager = TaskManager(max_cpus)
     logging.info (f'TaskManager started with {max_cpus} cpus')
     
