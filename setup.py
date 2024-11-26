@@ -1,18 +1,18 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="asyncio_queue",
+    name="batch_queue2",
     version="1.0.3",
     author="Neal Becker",
     author_email="ndbecker2@gmail.com",
     description="A Python-based batch queue manager",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
-    url="https://sr.ht/~ndbecker2/asyncio_queue/",
+    url="https://sr.ht/~ndbecker2/batch_queue2/",
     packages=find_packages(),  # Automatically includes 'batch_queue' directory
     entry_points={
         "console_scripts": [
-            "batch_queue=asyncio_queue.batch_queue:main",  # Correct path
+            "batch_queue=batch_queue2.batch_queue:main",  # Correct path
         ]
     },
     classifiers=[

@@ -87,7 +87,7 @@ def start_server(max_cpus):
         env["MAX_CPUS"] = str(max_cpus)
 
     # Start the server process
-    subprocess.Popen(["python", "-m", "asyncio_queue.server"], env=env)
+    subprocess.Popen(["python", "-m", "batch_queue2.server"], env=env)
 
 def main():
     parser = argparse.ArgumentParser(description="Batch Queue CLI")

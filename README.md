@@ -1,6 +1,6 @@
-# asyncio_queue
+# batch_queue2
 
-**asyncio_queue** is a simple task queuing system built using Python's `asyncio`. It allows you to submit, manage, and track tasks using a lightweight, XML-RPC-based interface.
+**batch_queue2** is a simple task queuing system built using Python's `asyncio`. It allows you to submit, manage, and track tasks using a lightweight, XML-RPC-based interface.
 
 ## Features
 - Submit, list, suspend, resume, and kill tasks using command-line commands.
@@ -15,17 +15,17 @@
 - `requests`
 
 ## Installation
-You can install **asyncio_queue** from PyPI:
+You can install **batch_queue2** from PyPI:
 
 ```sh
-pip install asyncio_queue
+pip install batch_queue2
 ```
 
-Or clone the repository from [Sourcehut](https://sr.ht/~ndbecker2/asyncio_queue/):
+Or clone the repository from [Sourcehut](https://sr.ht/~ndbecker2/batch_queue2/):
 
 ```sh
-git clone https://sr.ht/~ndbecker2/asyncio_queue/
-cd asyncio_queue
+git clone https://sr.ht/~ndbecker2/batch_queue2/
+cd batch_queue2
 python -m pip install .
 ```
 
