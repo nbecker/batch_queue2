@@ -169,29 +169,34 @@ class TaskManager:
             logging.error(f"Task {task_id} not found.")
             return None
 
-    async def kill_task(self, task_id, signal_type):
-        task = self.get_task(task_id)
-        if task:
-            try:
-                # Handle queued tasks that haven't started yet
-                if task in self.queued_tasks:
-                    self.queued_tasks.remove(task)
-                    logging.info(f"Task {task.task_id} removed from queue.")
-                # Handle active or paused tasks
-                else:
-                    os.kill(task.process.pid, signal_type)
-                    if task in self.active_tasks:
-                        self.active_tasks.remove(task)
-                    elif task in self.paused_tasks:
-                        self.paused_tasks.remove(task)
-                    logging.info(f"Task {task.task_id} killed with signal {signal_type}.")
-                return True
-            except ProcessLookupError:
-                logging.error(f"Task {task.task_id} could not be killed: Process not found.")
-                return False
-        else:
-            logging.error(f"Task {task_id} not found.")
-            return False
+    async def kill_tasks(self, task_ids, signal_type):
+        results = {}
+        for task_id in task_ids:
+            task = self.get_task(task_id)
+            if task:
+                try:
+                    # Handle queued tasks that haven't started yet
+                    if task in self.queued_tasks:
+                        self.queued_tasks.remove(task)
+                        logging.info(f"Task {task.task_id} removed from queue.")
+                        results[task_id] = True
+                    # Handle active or paused tasks
+                    else:
+                        os.kill(task.process.pid, signal_type)
+                        if task in self.active_tasks:
+                            self.active_tasks.remove(task)
+                        elif task in self.paused_tasks:
+                            self.paused_tasks.remove(task)
+                        logging.info(f"Task {task.task_id} killed with signal {signal_type}.")
+                        results[task_id] = True
+                except ProcessLookupError:
+                    logging.error(f"Task {task.task_id} could not be killed: Process not found.")
+                    results[task_id] = False
+            else:
+                logging.error(f"Task {task_id} not found.")
+                results[task_id] = False
+
+        return results
 
     def get_task(self, task_id):
         for task in self.active_tasks + self.queued_tasks + self.paused_tasks:
@@ -231,9 +236,9 @@ async def handle_rpc(request, task_manager):
             result = await task_manager.resume_tasks(task_ids)
             response = xmlrpc.client.dumps((result,), methodresponse=True)
 
-        elif method_name == "kill_task":
-            task_id, signal_type = params
-            result = await task_manager.kill_task(task_id, signal_type)
+        elif method_name == "kill_tasks":
+            task_ids, signal_type = params
+            result = await task_manager.kill_tasks(task_ids, signal_type)
             response = xmlrpc.client.dumps((result,), methodresponse=True)
 
         elif method_name == "stop_server":

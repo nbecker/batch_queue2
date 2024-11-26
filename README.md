@@ -73,23 +73,23 @@ This will display:
 - Paused tasks.
 
 ### Suspending and Resuming Tasks
-To suspend a running task:
+To suspend a running task(s):
 
 ```sh
-batch_queue suspend <task_id>
+batch_queue suspend <task_ids>
 ```
 
-To resume a paused task:
+To resume a paused task(s):
 
 ```sh
-batch_queue resume <task_id>
+batch_queue resume <task_ids>
 ```
 
-### Killing a Task
-To kill a specific task:
+### Killing Task(s)
+To kill specific task(s):
 
 ```sh
-batch_queue kill <task_id>
+batch_queue kill <task_ids> <signal>
 ```
 You can also optionally specify the signal to use, default is `SIGTERM`.
 

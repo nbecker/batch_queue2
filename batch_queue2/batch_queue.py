@@ -4,6 +4,7 @@ import xmlrpc.client
 import os
 import argparse
 import subprocess
+import signal
 
 SERVER_URL = "http://localhost:7080/RPC2"
 
@@ -40,13 +41,17 @@ def id_tasks(task_id):
         except xmlrpc.client.Fault as err:
             print(f"Failed to id task: {err}")
 
-def kill_task(task_id, signal):
+def kill_tasks(task_ids, signal_type):
     with xmlrpc.client.ServerProxy(SERVER_URL, allow_none=True) as proxy:
         try:
-            proxy.kill_task(task_id, signal)
-            print(f"Task {task_id} killed successfully.")
+            result = proxy.kill_tasks(task_ids, signal_type)
+            for task_id, status in result.items():
+                if status:
+                    print(f"Task {task_id} killed successfully.")
+                else:
+                    print(f"Failed to kill task {task_id}.")
         except xmlrpc.client.Fault as err:
-            print(f"Failed to kill task {task_id}: {err}")
+            print(f"Failed to kill tasks: {err}")
 
 def suspend_tasks(task_ids):
     with xmlrpc.client.ServerProxy(SERVER_URL, allow_none=True) as proxy:
@@ -112,8 +117,8 @@ def main():
     
     # Kill command
     kill_parser = subparsers.add_parser("kill", help="Kill a task")
-    kill_parser.add_argument("task_id", type=int, help="The ID of the task to kill")
-    kill_parser.add_argument("signal", type=int, help="The signal to send to the task")
+    kill_parser.add_argument("task_ids", type=int, nargs='+', help="The ID of the task to kill")
+    kill_parser.add_argument("signal", type=int, default=signal.SIGTERM, help="The signal to send to the task")
 
     # Suspend command
     suspend_parser = subparsers.add_parser("suspend", help="Suspend a task")
@@ -137,7 +142,7 @@ def main():
     elif args.command == "id":
         id_tasks(args.task_id)
     elif args.command == "kill":
-        kill_task(args.task_id, args.signal)
+        kill_tasks(args.task_ids, args.signal)
     elif args.command == "suspend":
         suspend_tasks(args.task_ids)
     elif args.command == "resume":
