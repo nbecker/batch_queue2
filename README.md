@@ -1,6 +1,12 @@
 # batch_queue2
 
-**batch_queue2** is a simple task queuing system built using Python's `asyncio`. It allows you to submit, manage, and track tasks using a lightweight, XML-RPC-based interface.
+**batch_queue2** is a simple task queuing system built using Python's
+`asyncio`. It allows you to submit, manage, and track tasks using a
+lightweight, XML-RPC-based interface.  It's main purpose is to allow
+queueing up more tasks to run on the local machine than we can support
+running simultaneously; either because the number of tasks is more
+than the number of CPUs or because running all those tasks
+simultaneously will use too much memory.
 
 ## Features
 - Submit, list, suspend, resume, and kill tasks using command-line commands.
