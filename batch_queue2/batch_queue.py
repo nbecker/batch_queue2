@@ -44,7 +44,7 @@ def id_tasks(task_id):
 def kill_tasks(task_ids, signal_type):
     with xmlrpc.client.ServerProxy(SERVER_URL, allow_none=True) as proxy:
         try:
-            result = proxy.kill_tasks(task_ids, signal_type)
+            result = proxy.kill_tasks(task_ids, int(signal_type))
             for task_id, status in result.items():
                 if status:
                     print(f"Task {task_id} killed successfully.")
@@ -118,7 +118,7 @@ def main():
     # Kill command
     kill_parser = subparsers.add_parser("kill", help="Kill a task")
     kill_parser.add_argument("task_ids", type=int, nargs='+', help="The ID of the task to kill")
-    kill_parser.add_argument("signal", type=int, default=signal.SIGTERM, help="The signal to send to the task")
+    kill_parser.add_argument("--signal", type=int, default=signal.SIGTERM, help="The signal to send to the task")
 
     # Suspend command
     suspend_parser = subparsers.add_parser("suspend", help="Suspend a task")

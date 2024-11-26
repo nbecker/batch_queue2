@@ -84,12 +84,18 @@ class TaskManager:
 
     async def monitor_task(self, task):
         await task.process.wait()  # Wait for the subprocess to complete
-        self.active_tasks.remove(task)
 
-        if task.process.returncode == 0:
-            logging.info(f"Task id={task.task_id} cmd={task.command} completed successfully.")
+        # Only attempt to remove the task if it is still in the active list
+        if task in self.active_tasks:
+            self.active_tasks.remove(task)
+
+        # If the task process has been killed, process will be None.
+        if task.process is None:
+            logging.info(f"Task {task.task_id} was killed.")
+        elif task.process.returncode == 0:
+            logging.info(f"Task {task.task_id} completed successfully.")
         else:
-            logging.error(f"Task id={task.task_id} cmd={task.command} failed with return code {task.process.returncode}.")
+            logging.error(f"Task {task.task_id} failed with return code {task.process.returncode}.")
 
         # Schedule any tasks waiting in the queue
         await self.schedule_tasks()
@@ -169,7 +175,8 @@ class TaskManager:
             logging.error(f"Task {task_id} not found.")
             return None
 
-    async def kill_tasks(self, task_ids, signal_type):
+    async def kill_tasks(self, task_ids, signal_type=signal.SIGTERM):
+        logging.info(f'kill_tasks called: {task_ids}')
         results = {}
         for task_id in task_ids:
             task = self.get_task(task_id)
@@ -179,23 +186,31 @@ class TaskManager:
                     if task in self.queued_tasks:
                         self.queued_tasks.remove(task)
                         logging.info(f"Task {task.task_id} removed from queue.")
-                        results[task_id] = True
+                        results[str(task_id)] = True
+
                     # Handle active or paused tasks
-                    else:
+                    elif task in self.active_tasks or task in self.paused_tasks:
+                        # Send the termination signal
                         os.kill(task.process.pid, signal_type)
+                        task.process = None  # Set process to None to indicate it has been terminated
+
                         if task in self.active_tasks:
                             self.active_tasks.remove(task)
                         elif task in self.paused_tasks:
                             self.paused_tasks.remove(task)
+
                         logging.info(f"Task {task.task_id} killed with signal {signal_type}.")
-                        results[task_id] = True
+                        results[str(task_id)] = True
+                    else:
+                        logging.error(f"Task {task.task_id} could not be killed: Not found in active or paused lists.")
+                        results[str(task_id)] = False
                 except ProcessLookupError:
+                    # The process may already be reaped by the time we try to kill it.
                     logging.error(f"Task {task.task_id} could not be killed: Process not found.")
-                    results[task_id] = False
+                    results[str(task_id)] = False
             else:
                 logging.error(f"Task {task_id} not found.")
-                results[task_id] = False
-
+                results[str(task_id)] = False
         return results
 
     def get_task(self, task_id):

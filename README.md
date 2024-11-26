@@ -71,9 +71,10 @@ This will display:
 - Active tasks.
 - Queued tasks.
 - Paused tasks.
+- Runnable paused tasks.
 
 ### Suspending and Resuming Tasks
-To suspend a running task(s):
+To suspend task(s) (running or queued):
 
 ```sh
 batch_queue suspend <task_ids>
