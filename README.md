@@ -21,10 +21,10 @@ You can install **batch_queue2** from PyPI:
 pip install batch_queue2
 ```
 
-Or clone the repository from [Sourcehut](https://sr.ht/~ndbecker2/batch_queue2/):
+Or clone the repository from [Sourcehut](https://hg.sr.ht/~ndbecker2/batch_queue2/):
 
 ```sh
-git clone https://sr.ht/~ndbecker2/batch_queue2/
+hg clone https://hg.sr.ht/~ndbecker2/batch_queue2
 cd batch_queue2
 python -m pip install .
 ```
