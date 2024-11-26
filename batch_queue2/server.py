@@ -8,7 +8,12 @@ import xmlrpc.client
 import xmlrpc.server
 from aiohttp import web
 
-logging.basicConfig(filename=os.path.expanduser("~/batch_queue.log"), level=logging.INFO)
+logging.basicConfig(
+    filename=os.path.expanduser("~/batch_queue.log"),
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
 
 class Task:
     def __init__(self, task_id, command, user, path, env, log_stdout=None, log_stderr=None):
