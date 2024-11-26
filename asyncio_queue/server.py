@@ -89,29 +89,60 @@ class TaskManager:
         # Schedule any tasks waiting in the queue
         await self.schedule_tasks()
 
-    async def suspend_task(self, task_id):
-        task = self.get_task(task_id)
-        if task and task in self.active_tasks:
-            os.kill(task.process.pid, signal.SIGSTOP)
-            self.active_tasks.remove(task)
-            task.runnable = False
-            self.paused_tasks.append(task)
-            logging.info(f"Task {task.task_id} suspended.")
-            return True
-        else:
-            logging.error(f"Task {task_id} not found or not active.")
-            return False
+    async def suspend_tasks(self, task_ids):
+        results = {}
+        for task_id in task_ids:
+            task = self.get_task(task_id)
+            if task:
+                if task in self.active_tasks:
+                    # Suspend an active task
+                    os.kill(task.process.pid, signal.SIGSTOP)
+                    self.active_tasks.remove(task)
+                    self.paused_tasks.append(task)
+                    task.runnable = False
+                    logging.info(f"Task {task.task_id} suspended.")
+                    results[str(task_id)] = True
+                elif task in self.queued_tasks:
+                    # Suspend a queued task
+                    self.queued_tasks.remove(task)
+                    self.paused_tasks.append(task)
+                    task.runnable = False
+                    logging.info(f"Queued task {task.task_id} suspended.")
+                    results[str(task_id)] = True
+                else:
+                    logging.error(f"Task {task_id} not found or cannot be suspended.")
+                    results[str(task_id)] = False
+            else:
+                logging.error(f"Task {task_id} not found.")
+                results[str(task_id)] = False
 
-    async def resume_task(self, task_id):
-        task = self.get_task(task_id)
-        if task and task in self.paused_tasks:
-            task.runnable = True
-            logging.info(f"Task {task.task_id} marked as runnable.")
-            await self.schedule_tasks()
-            return True
-        else:
-            logging.error(f"Task {task_id} not found or not paused.")
-            return False
+        # Schedule tasks to ensure other queued tasks can run
+        await self.schedule_tasks()
+        return results
+
+    async def resume_tasks(self, task_ids):
+        results = {}
+        for task_id in task_ids:
+            task = self.get_task(task_id)
+            if task and task in self.paused_tasks:
+                if task.process:
+                    task.runnable = True
+                    logging.info(f"Task {task.task_id} marked runnable.")
+                else:
+                    # Task hasn't started yet, move it back to the queue to be started
+                    self.queued_tasks.append(task)
+                    self.paused_tasks.remove(task)
+                    task.runnable = True
+                    logging.info(f"Queued task {task.task_id} resumed.")
+
+                results[str(task_id)] = True
+            else:
+                logging.error(f"Task {task_id} not found or not paused.")
+                results[str(task_id)] = False
+
+        # Schedule tasks to ensure resumed tasks are picked up
+        await self.schedule_tasks()
+        return results
 
     async def list_tasks(self):
         tasks_info = {
@@ -185,14 +216,14 @@ async def handle_rpc(request, task_manager):
             task_info = await task_manager.get_task_info(task_id)
             response = xmlrpc.client.dumps((task_info,), methodresponse=True, allow_none=True)
 
-        elif method_name == "suspend_task":
-            task_id = params[0]
-            result = await task_manager.suspend_task(task_id)
+        elif method_name == "suspend_tasks":
+            task_ids = params[0]
+            result = await task_manager.suspend_tasks(task_ids)
             response = xmlrpc.client.dumps((result,), methodresponse=True)
 
-        elif method_name == "resume_task":
-            task_id = params[0]
-            result = await task_manager.resume_task(task_id)
+        elif method_name == "resume_tasks":
+            task_ids = params[0]
+            result = await task_manager.resume_tasks(task_ids)
             response = xmlrpc.client.dumps((result,), methodresponse=True)
 
         elif method_name == "kill_task":

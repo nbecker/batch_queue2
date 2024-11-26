@@ -27,6 +27,7 @@ def list_tasks():
             print(f"Active tasks: {tasks_info['active']}")
             print(f"Queued tasks: {tasks_info['queued']}")
             print(f"Paused tasks: {tasks_info['paused']}")
+            print(f"Runnable paused tasks: {tasks_info['runnable_paused']}")
         except xmlrpc.client.Fault as err:
             print(f"Failed to list tasks: {err}")
 
@@ -47,21 +48,29 @@ def kill_task(task_id, signal):
         except xmlrpc.client.Fault as err:
             print(f"Failed to kill task {task_id}: {err}")
 
-def suspend_task(task_id):
+def suspend_tasks(task_ids):
     with xmlrpc.client.ServerProxy(SERVER_URL, allow_none=True) as proxy:
         try:
-            proxy.suspend_task(task_id)
-            print(f"Task {task_id} suspended successfully.")
+            result = proxy.suspend_tasks(task_ids)
+            for task_id, success in result.items():
+                if success:
+                    print(f"Task {task_id} suspended successfully.")
+                else:
+                    print(f"Failed to suspend task {task_id}.")
         except xmlrpc.client.Fault as err:
-            print(f"Failed to suspend task {task_id}: {err}")
+            print(f"Failed to suspend tasks: {err}")
 
-def resume_task(task_id):
+def resume_tasks(task_ids):
     with xmlrpc.client.ServerProxy(SERVER_URL, allow_none=True) as proxy:
         try:
-            proxy.resume_task(task_id)
-            print(f"Task {task_id} resumed successfully.")
+            result = proxy.resume_tasks(task_ids)
+            for task_id, success in result.items():
+                if success:
+                    print(f"Task {task_id} resumed successfully.")
+                else:
+                    print(f"Failed to resume task {task_id}.")
         except xmlrpc.client.Fault as err:
-            print(f"Failed to resume task {task_id}: {err}")
+            print(f"Failed to resume tasks: {err}")
 
 def stop_server():
     with xmlrpc.client.ServerProxy(SERVER_URL, allow_none=True) as proxy:
@@ -108,11 +117,11 @@ def main():
 
     # Suspend command
     suspend_parser = subparsers.add_parser("suspend", help="Suspend a task")
-    suspend_parser.add_argument("task_id", type=int, help="The ID of the task to suspend")
+    suspend_parser.add_argument("task_ids", type=int, nargs='+', help="The IDs of the tasks to suspend")
 
     # Resume command
     resume_parser = subparsers.add_parser("resume", help="Resume a paused task")
-    resume_parser.add_argument("task_id", type=int, help="The ID of the task to resume")
+    resume_parser.add_argument("task_ids", type=int, nargs='+', help="The IDs of the tasks to resume")
 
     # Stop server command
     stop_parser = subparsers.add_parser("stop", help="Stop the server")
@@ -130,9 +139,9 @@ def main():
     elif args.command == "kill":
         kill_task(args.task_id, args.signal)
     elif args.command == "suspend":
-        suspend_task(args.task_id)
+        suspend_tasks(args.task_ids)
     elif args.command == "resume":
-        resume_task(args.task_id)
+        resume_tasks(args.task_ids)
     elif args.command == "stop":
         stop_server()
     else:
