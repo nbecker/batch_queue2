@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="batch_queue2",
-    version="1.0.6",
+    version="1.0.7",
     author="Neal Becker",
     author_email="ndbecker2@gmail.com",
     description="A Python-based batch queue manager",

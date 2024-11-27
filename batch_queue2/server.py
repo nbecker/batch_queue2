@@ -49,6 +49,13 @@ class TaskManager:
     async def schedule_tasks(self):
         logging.info(f"Scheduling tasks: active={len(self.active_tasks)}, queued={len(self.queued_tasks)}, paused={len(self.paused_tasks)}")
 
+        stoppable_tasks = [task for task in self.active_tasks if not task.runnable]
+        for task in stoppable_tasks:
+            os.kill(task.process.pid, signal.SIGSTOP)
+            self.active_tasks.remove(task)
+            self.paused_tasks.append(task)
+            logging.info (f'stopping task: {task.task_id}')
+
         runnable_tasks = [task for task in self.paused_tasks if task.runnable]
         while len(self.active_tasks) < self.max_cpus and (self.queued_tasks or runnable_tasks):
             if runnable_tasks:
@@ -60,7 +67,7 @@ class TaskManager:
             else:
                 task = self.queued_tasks.pop(0)
                 await self.run_task(task)
-
+            
     async def run_task(self, task):
         stdout = open(task.log_stdout, "w") if task.log_stdout else asyncio.subprocess.DEVNULL
         stderr = open(task.log_stderr, "w") if task.log_stderr else asyncio.subprocess.DEVNULL
@@ -107,11 +114,9 @@ class TaskManager:
             if task:
                 if task in self.active_tasks:
                     # Suspend an active task
-                    os.kill(task.process.pid, signal.SIGSTOP)
-                    self.active_tasks.remove(task)
-                    self.paused_tasks.append(task)
+                    # Mark as not runnable, let scheduler do the rest
                     task.runnable = False
-                    logging.info(f"Task {task.task_id} suspended.")
+                    logging.info(f"Task {task.task_id} marked not runnable.")
                     results[str(task_id)] = True
                 elif task in self.queued_tasks:
                     # Suspend a queued task
@@ -137,6 +142,7 @@ class TaskManager:
             task = self.get_task(task_id)
             if task and task in self.paused_tasks:
                 if task.process:
+                    # Mark as runnable, let scheduler do the rest
                     task.runnable = True
                     logging.info(f"Task {task.task_id} marked runnable.")
                 else:
