@@ -5,3 +5,6 @@ syntax: glob
 __pycache__
 asyncio_queue.egg-info
 dist
+.coverage
+.tox
+*.egg-info

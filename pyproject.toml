@@ -1,3 +1,29 @@
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[project]
+requires-python = ">=3.7"
+name = "batch_queue2"
+version = "1.0.0"
+description = "A batch queue system implemented with asyncio"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Neal Becker", email = "ndbecker2@gmail.com" }]
+urls = { "Repository" = "https://hg.sr.ht/~ndbecker2/batch_queue2" }
+dependencies = ["aiohttp", "pytest", "pytest-cov"]
+keywords = ["queue", "asyncio", "batch"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent"
+]
+
+[project.optional-dependencies]
+testing = ["pytest", "pytest-cov"]
+
+[project.scripts]
+batch_queue = "batch_queue2.batch_queue:main"
+
+[tool.setuptools]
+include-package-data = true

@@ -1,0 +1,22 @@
+# -*- mode: yaml -*-
+
+image: archlinux/archlinux:latest
+packages:
+  - python
+  - python-pip
+  - python-virtualenv
+  - python-setuptools
+  - python-wheel
+  - git
+  - mercurial
+
+sources:
+  - hg+https://hg.sr.ht/~your_username/your_project_name
+
+tasks:
+  - install-deps: |
+      python -m pip install --upgrade pip tox
+  - run-tests: |
+      tox
+artifacts:
+  - "**/test-results.xml"
