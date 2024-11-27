@@ -8,3 +8,4 @@ dist
 .coverage
 .tox
 *.egg-info
+.git
