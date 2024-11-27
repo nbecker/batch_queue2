@@ -8,13 +8,17 @@ import signal
 
 SERVER_URL = "http://localhost:7080/RPC2"
 
-def submit_task(command, log_stdout=None, log_stderr=None):
+import getpass
+import os
+
+def submit_task(command, log_stdout, log_stderr):
+    username = getpass.getuser()  # Replaces os.getlogin()
     path = os.getcwd()  # Capture the current working directory
     env = dict(os.environ)  # Capture the current environment variables
 
     with xmlrpc.client.ServerProxy(SERVER_URL, allow_none=True) as proxy:
         try:
-            task_id = proxy.submit_task(command, os.getlogin(), path, env, log_stdout, log_stderr)
+            task_id = proxy.submit_task(command, username, path, env, log_stdout, log_stderr)
             print(f"Task submitted successfully with ID: {task_id}")
         except xmlrpc.client.Fault as err:
             print(f"Failed to submit task: {err}")
