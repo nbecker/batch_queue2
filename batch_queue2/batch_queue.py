@@ -86,13 +86,27 @@ def stop_server():
             print(f"Failed to stop server: {err}")
 
 def start_server(max_cpus):
-    # Set MAX_CPUS environment variable before starting the server
+    """Start the batch queue server."""
+    import os
+    import subprocess
+
+    # Set environment variable for max CPUs
     env = os.environ.copy()
-    if max_cpus is not None:
+    if max_cpus:
         env["MAX_CPUS"] = str(max_cpus)
 
-    # Start the server process
-    subprocess.Popen(["python", "-m", "batch_queue2.server"], env=env)
+    try:
+        # Launch the server as a background process
+        subprocess.Popen(
+            ["python", "-m", "batch_queue2.server"],
+            env=env,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        print("Server started successfully.")
+    except Exception as e:
+        print(f"Failed to start the server: {e}")
+        exit(1)
 
 def main():
     parser = argparse.ArgumentParser(description="Batch Queue CLI")
