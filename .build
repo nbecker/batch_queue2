@@ -1,0 +1,3 @@
+#! /bin/sh
+echo "Running build..."
+# Add your build commands here
