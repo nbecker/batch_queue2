@@ -6,25 +6,57 @@ import argparse
 import subprocess
 import signal
 
-SERVER_URL = "http://localhost:7080/RPC2"
+import xmlrpc.client
+import http.client
+import socket
+import os
+
+SERVER_SOCKET = "/tmp/batch_queue.sock"
+
+class UnixStreamHTTPConnection(http.client.HTTPConnection):
+    """Custom HTTPConnection to use Unix domain sockets."""
+    def __init__(self, socket_path, *args, **kwargs):
+        super().__init__("localhost", *args, **kwargs)
+        self.socket_path = socket_path
+
+    def connect(self):
+        """Override connect to use a Unix domain socket."""
+        self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        self.sock.connect(self.socket_path)
+
+
+class UnixStreamTransport(xmlrpc.client.Transport):
+    """Custom XML-RPC transport for Unix domain sockets."""
+    def __init__(self, socket_path):
+        super().__init__()
+        self.socket_path = socket_path
+
+    def make_connection(self, host):
+        return UnixStreamHTTPConnection(self.socket_path)
 
 import getpass
-import os
 
 def submit_task(command, log_stdout, log_stderr):
     username = getpass.getuser()  # Replaces os.getlogin()
     path = os.getcwd()  # Capture the current working directory
     env = dict(os.environ)  # Capture the current environment variables
 
-    with xmlrpc.client.ServerProxy(SERVER_URL, allow_none=True) as proxy:
+    transport = UnixStreamTransport(SERVER_SOCKET)
+
+    # Use the "with" statement to manage the ServerProxy lifecycle
+    with xmlrpc.client.ServerProxy("http://localhost", transport=transport, allow_none=True) as proxy:
         try:
             task_id = proxy.submit_task(command, username, path, env, log_stdout, log_stderr)
             print(f"Task submitted successfully with ID: {task_id}")
         except xmlrpc.client.Fault as err:
             print(f"Failed to submit task: {err}")
 
+
 def list_tasks():
-    with xmlrpc.client.ServerProxy(SERVER_URL, allow_none=True) as proxy:
+    transport = UnixStreamTransport(SERVER_SOCKET)
+
+    # Use the "with" statement to manage the ServerProxy lifecycle
+    with xmlrpc.client.ServerProxy("http://localhost", transport=transport, allow_none=True) as proxy:
         try:
             tasks_info = proxy.list_tasks()
             print("Tasks:")
@@ -37,7 +69,10 @@ def list_tasks():
             print(f"Failed to list tasks: {err}")
 
 def id_tasks(task_id):
-    with xmlrpc.client.ServerProxy(SERVER_URL, allow_none=True) as proxy:
+    transport = UnixStreamTransport(SERVER_SOCKET)
+
+    # Use the "with" statement to manage the ServerProxy lifecycle
+    with xmlrpc.client.ServerProxy("http://localhost", transport=transport, allow_none=True) as proxy:
         try:
             id_info = proxy.id_task(task_id)
             print(f'cmd: {id_info}')
@@ -46,7 +81,10 @@ def id_tasks(task_id):
             print(f"Failed to id task: {err}")
 
 def kill_tasks(task_ids, signal_type):
-    with xmlrpc.client.ServerProxy(SERVER_URL, allow_none=True) as proxy:
+    transport = UnixStreamTransport(SERVER_SOCKET)
+
+    # Use the "with" statement to manage the ServerProxy lifecycle
+    with xmlrpc.client.ServerProxy("http://localhost", transport=transport, allow_none=True) as proxy:
         try:
             result = proxy.kill_tasks(task_ids, int(signal_type))
             for task_id, status in result.items():
@@ -58,7 +96,10 @@ def kill_tasks(task_ids, signal_type):
             print(f"Failed to kill tasks: {err}")
 
 def suspend_tasks(task_ids):
-    with xmlrpc.client.ServerProxy(SERVER_URL, allow_none=True) as proxy:
+    transport = UnixStreamTransport(SERVER_SOCKET)
+
+    # Use the "with" statement to manage the ServerProxy lifecycle
+    with xmlrpc.client.ServerProxy("http://localhost", transport=transport, allow_none=True) as proxy:
         try:
             result = proxy.suspend_tasks(task_ids)
             for task_id, success in result.items():
@@ -70,7 +111,10 @@ def suspend_tasks(task_ids):
             print(f"Failed to suspend tasks: {err}")
 
 def resume_tasks(task_ids):
-    with xmlrpc.client.ServerProxy(SERVER_URL, allow_none=True) as proxy:
+    transport = UnixStreamTransport(SERVER_SOCKET)
+
+    # Use the "with" statement to manage the ServerProxy lifecycle
+    with xmlrpc.client.ServerProxy("http://localhost", transport=transport, allow_none=True) as proxy:
         try:
             result = proxy.resume_tasks(task_ids)
             for task_id, success in result.items():
@@ -82,12 +126,17 @@ def resume_tasks(task_ids):
             print(f"Failed to resume tasks: {err}")
 
 def stop_server():
-    with xmlrpc.client.ServerProxy(SERVER_URL, allow_none=True) as proxy:
+    transport = UnixStreamTransport(SERVER_SOCKET)
+
+    # Use the "with" statement to manage the ServerProxy lifecycle
+    with xmlrpc.client.ServerProxy("http://localhost", transport=transport, allow_none=True) as proxy:
         try:
             proxy.stop_server()
             print("Server stopped successfully.")
         except xmlrpc.client.Fault as err:
             print(f"Failed to stop server: {err}")
+
+SOCKET_PATH = "/tmp/batch_queue.sock"
 
 def start_server(max_cpus):
     """Start the batch queue server."""
@@ -104,8 +153,10 @@ def start_server(max_cpus):
         subprocess.Popen(
             ["python", "-m", "batch_queue2.server"],
             env=env,
+            stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
+            preexec_fn=os.setsid  # Start a new session            
         )
         print("Server started successfully.")
     except Exception as e:

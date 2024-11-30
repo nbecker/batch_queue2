@@ -282,25 +282,37 @@ async def handle_rpc(request, task_manager):
         return web.Response(text=fault_response, content_type="text/xml")
 
 
+SOCKET_PATH = "/tmp/batch_queue.sock"  # Define your UDS path
+
 async def start_server(task_manager):
-    # Use a closure to pass task_manager into the handler
+    # Remove the existing socket file if it exists
+    if os.path.exists(SOCKET_PATH):
+        os.remove(SOCKET_PATH)
+
     async def handler(request):
         return await handle_rpc(request, task_manager)
 
     app = web.Application()
     app.add_routes([web.post('/RPC2', handler)])
 
-    # Disable access logs by setting access_log=None in AppRunner
-    runner = web.AppRunner(app, access_log=None)
+    runner = web.AppRunner(app)
     await runner.setup()
-    site = web.TCPSite(runner, 'localhost', 7080)
+
+    # Create a Unix domain socket
+    site = web.UnixSite(runner, SOCKET_PATH)
     await site.start()
-    logging.info(f"Server started on http://localhost:7080/")
+
+    # Restrict permissions to the owner
+    os.chmod(SOCKET_PATH, 0o600)
+
+    logging.info(f"Server started on Unix domain socket: {SOCKET_PATH}")
 
     try:
         await asyncio.Future()  # Run forever
     except asyncio.CancelledError:
         await runner.cleanup()
+        if os.path.exists(SOCKET_PATH):
+            os.remove(SOCKET_PATH)
 
 async def graceful_shutdown():
     logging.info("Initiating graceful shutdown...")
