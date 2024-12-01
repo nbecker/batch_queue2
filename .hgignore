@@ -9,3 +9,6 @@ dist
 .tox
 *.egg-info
 .git
+.pytest_cache
+coverage.xml
+htmlcov
