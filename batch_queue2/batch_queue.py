@@ -1,15 +1,12 @@
 #!/usr/bin/env python3
 
-import xmlrpc.client
 import os
 import argparse
-import subprocess
 import signal
 
 import xmlrpc.client
 import http.client
 import socket
-import os
 
 SERVER_SOCKET = "/tmp/batch_queue.sock"
 
@@ -135,8 +132,6 @@ def stop_server():
             print("Server stopped successfully.")
         except xmlrpc.client.Fault as err:
             print(f"Failed to stop server: {err}")
-
-SOCKET_PATH = "/tmp/batch_queue.sock"
 
 def start_server(max_cpus):
     """Start the batch queue server."""
