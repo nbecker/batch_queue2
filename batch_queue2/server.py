@@ -299,7 +299,7 @@ async def start_server(task_manager):
     await runner.setup()
 
     # Create a Unix domain socket
-    site = web.UnixSite(runner, SOCKET_PATH)
+    site = web.UnixSite(runner, SOCKET_PATH, access_log=None)
     await site.start()
 
     # Restrict permissions to the owner
