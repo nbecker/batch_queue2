@@ -295,11 +295,11 @@ async def start_server(task_manager):
     app = web.Application()
     app.add_routes([web.post('/RPC2', handler)])
 
-    runner = web.AppRunner(app)
+    runner = web.AppRunner(app, access_log=None)
     await runner.setup()
 
     # Create a Unix domain socket
-    site = web.UnixSite(runner, SOCKET_PATH, access_log=None)
+    site = web.UnixSite(runner, SOCKET_PATH)
     await site.start()
 
     # Restrict permissions to the owner
