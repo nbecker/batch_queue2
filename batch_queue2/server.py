@@ -302,8 +302,9 @@ async def handle_rpc(request, task_manager):
 
 
 def get_socket_path():
-    runtime_dir = os.getenv("XDG_RUNTIME_DIR", os.path.expanduser("~"))
-    return os.path.join(runtime_dir, "batch_queue.sock")
+    # Try XDG_RUNTIME_DIR, then HOME, and finally /tmp
+    base_dir = os.getenv("XDG_RUNTIME_DIR", os.getenv("HOME", "/tmp"))
+    return os.path.join(base_dir, "batch_queue.sock")
 
 SOCKET_PATH = os.getenv("BATCH_QUEUE_SOCKET", get_socket_path())
 

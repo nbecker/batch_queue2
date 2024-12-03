@@ -8,9 +8,14 @@ import xmlrpc.client
 import http.client
 import socket
 
+import os
+
+import os
+
 def get_socket_path():
-    runtime_dir = os.getenv("XDG_RUNTIME_DIR", os.path.expanduser("~"))
-    return os.path.join(runtime_dir, "batch_queue.sock")
+    # Try XDG_RUNTIME_DIR, then HOME, and finally /tmp
+    base_dir = os.getenv("XDG_RUNTIME_DIR", os.getenv("HOME", "/tmp"))
+    return os.path.join(base_dir, "batch_queue.sock")
 
 SERVER_SOCKET = os.getenv("BATCH_QUEUE_SOCKET", get_socket_path())
 
