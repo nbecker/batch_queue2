@@ -1,5 +1,8 @@
 name: CI
 
+env:
+  BATCH_QUEUE_SOCKET: /tmp/batch_queue.sock
+
 on:
   push:
     branches:

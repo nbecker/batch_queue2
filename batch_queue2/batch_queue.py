@@ -8,7 +8,11 @@ import xmlrpc.client
 import http.client
 import socket
 
-SERVER_SOCKET = "/tmp/batch_queue.sock"
+def get_socket_path():
+    runtime_dir = os.getenv("XDG_RUNTIME_DIR", os.path.expanduser("~"))
+    return os.path.join(runtime_dir, "batch_queue.sock")
+
+SERVER_SOCKET = os.getenv("BATCH_QUEUE_SOCKET", get_socket_path())
 
 class UnixStreamHTTPConnection(http.client.HTTPConnection):
     """Custom HTTPConnection to use Unix domain sockets."""

@@ -301,7 +301,11 @@ async def handle_rpc(request, task_manager):
         return web.Response(text=fault_response, content_type="text/xml")
 
 
-SOCKET_PATH = "/tmp/batch_queue.sock"  # Define your UDS path
+def get_socket_path():
+    runtime_dir = os.getenv("XDG_RUNTIME_DIR", os.path.expanduser("~"))
+    return os.path.join(runtime_dir, "batch_queue.sock")
+
+SOCKET_PATH = os.getenv("BATCH_QUEUE_SOCKET", get_socket_path())
 
 async def start_server(task_manager):
     # Remove the existing socket file if it exists
