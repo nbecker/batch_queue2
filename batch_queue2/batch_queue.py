@@ -122,6 +122,16 @@ def resume_tasks(task_ids):
         except xmlrpc.client.Fault as err:
             print(f"Failed to resume tasks: {err}")
 
+def set_cpus(ncpus):
+    transport = UnixStreamTransport(SERVER_SOCKET)
+
+    with xmlrpc.client.ServerProxy("http://localhost", transport=transport, allow_none=True) as proxy:
+        try:
+            result = proxy.set_cpus(ncpus)
+            print ('cpus set successfully')
+        except xmlrpc.client.Fault as err:
+            print(f"Failed to set cpus: {err}")
+
 def stop_server():
     transport = UnixStreamTransport(SERVER_SOCKET)
 
@@ -192,6 +202,10 @@ def main():
     resume_parser = subparsers.add_parser("resume", help="Resume a paused task")
     resume_parser.add_argument("task_ids", type=int, nargs='+', help="The IDs of the tasks to resume")
 
+    # set_cpus command
+    ncpus_parser = subparsers.add_parser("setcpus", help="set #cpus")
+    ncpus_parser.add_argument("ncpus", type=int, help="The #cpus")
+
     # Stop server command
     stop_parser = subparsers.add_parser("stop", help="Stop the server")
 
@@ -211,6 +225,8 @@ def main():
         suspend_tasks(args.task_ids)
     elif args.command == "resume":
         resume_tasks(args.task_ids)
+    elif args.command == "setcpus":
+        set_cpus(args.ncpus)
     elif args.command == "stop":
         stop_server()
     else:

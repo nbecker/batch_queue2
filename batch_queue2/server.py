@@ -161,6 +161,19 @@ class TaskManager:
         await self.schedule_tasks()
         return results
 
+    async def set_cpus (self, ncpus):
+        results = {}
+        self.max_cpus = int (ncpus)
+        if len (self.active_tasks) < self.max_cpus:
+            await self.schedule_tasks()
+        else:
+            trim = len (self.active_tasks) - self.max_cpus
+            ids_to_suspend = [task.task_id for task in self.active_tasks[-trim:]]
+            logging.info(f'Suspending task_ids: {ids_to_suspend}')
+            await self.suspend_tasks (ids_to_suspend)
+            await self.resume_tasks (ids_to_suspend)
+        return True
+    
     async def list_tasks(self):
         tasks_info = {
             "max_cpus": self.max_cpus,
@@ -267,6 +280,12 @@ async def handle_rpc(request, task_manager):
             logging.info("Shutting down server...")
             asyncio.create_task(graceful_shutdown())
 
+        elif method_name == "set_cpus":
+            ncpus = params[0]
+            logging.info(f"setting cpus: {ncpus}")
+            result = await task_manager.set_cpus(ncpus)
+            response = xmlrpc.client.dumps((result,), methodresponse=True)
+            
         else:
             response = xmlrpc.client.dumps(
                 xmlrpc.client.Fault(1, f"Unknown method '{method_name}'")
