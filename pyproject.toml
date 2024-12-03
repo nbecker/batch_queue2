@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 requires-python = ">=3.7"
 name = "batch_queue2"
-version = "1.0.9"
+version = "1.0.10"
 description = "A batch queue system implemented with asyncio"
 readme = "README.md"
 license = { text = "MIT" }

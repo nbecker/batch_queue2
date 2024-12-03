@@ -108,6 +108,17 @@ batch_queue id <task_id>
 ```
 This command provides detailed information about the task including command, user, working directory, environment variables, and logs.
 
+### Change #cpus
+You can reset the max #cpus.  When you do this, if the new maximum is
+greater than the number of active tasks the scheduler is recalled and
+queued tasks can be started.  If the new maximum is smaller than the
+number of active tasks tasks will be suspended, but marked runnable to
+be continued later.
+
+```sh
+batch_queue setcpus #cpus
+```
+
 ### Stopping the Server
 To stop the server:
 
@@ -133,12 +144,12 @@ This command gracefully stops the server, ensuring no tasks are left in a zombie
    batch_queue list
    ```
 
-4. Suspend a running task:
+4. Suspend running tasks:
    ```sh
    batch_queue suspend 0
    ```
 
-5. Resume a paused task:
+5. Resume paused tasks:
    ```sh
    batch_queue resume 0
    ```
@@ -154,3 +165,7 @@ The server logs all activity to `~/batch_queue.log`. You can view the log to mon
 ## License
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
 
+## Security
+The server listens on a unix domain socket normally in the user's home
+directory who starts it.  Only users with access to this socket can
+use it.
